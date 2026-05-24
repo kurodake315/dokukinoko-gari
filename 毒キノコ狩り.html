@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>毒キノコ狩り 🍄</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0d2b0d;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #ecf0f1;
+}
+
+/* ===== HEADER ===== */
+#header {
+  width: 100%;
+  max-width: 720px;
+  display: none;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(0,0,0,0.5);
+  border-bottom: 2px solid #27ae60;
+  flex-shrink: 0;
+}
+
+.stat-box { text-align: center; }
+.stat-label { font-size: 10px; color: #95a5a6; text-transform: uppercase; letter-spacing: 1px; }
+.stat-value { font-size: 20px; font-weight: bold; color: #f1c40f; }
+#lives-display { font-size: 20px; }
+
+/* ===== TIMER BAR ===== */
+#timer-bar-wrap {
+  width: 100%;
+  max-width: 720px;
+  height: 8px;
+  background: #1a3a1a;
+  display: none;
+  flex-shrink: 0;
+}
+#timer-bar {
+  height: 100%;
+  width: 100%;
+  background: #2ecc71;
+  transition: width 1s linear, background 0.5s;
+}
+
+/* ===== GAME FIELD ===== */
+#game-field {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  flex: 1;
+  background: linear-gradient(to bottom, #1a4a1a 50%, #2d6a1d 85%, #3a1e08 100%);
+  overflow: hidden;
+}
+
+/* ===== OVERLAYS ===== */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  background: rgba(0,0,0,0.88);
+  text-align: center;
+  padding: 24px;
+}
+.overlay.hidden { display: none; }
+
+.overlay h1 { font-size: 2.6em; margin-bottom: 16px; }
+.overlay h2 { font-size: 1.6em; margin-bottom: 12px; }
+.overlay p  { font-size: 1.05em; line-height: 1.7; color: #bdc3c7; margin-bottom: 10px; }
+
+.btn {
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  padding: 13px 38px;
+  font-size: 1.15em;
+  border-radius: 30px;
+  cursor: pointer;
+  margin-top: 14px;
+  transition: transform 0.1s, background 0.2s;
+}
+.btn:hover  { background: #2ecc71; transform: scale(1.05); }
+.btn:active { transform: scale(0.96); }
+
+/* ===== START SCREEN ===== */
+#start-overlay h1 { color: #e74c3c; text-shadow: 0 0 24px rgba(231,76,60,0.5); }
+
+/* ===== HINT SCREEN ===== */
+#hint-overlay h2 { color: #f39c12; }
+#hint-mushroom-wrap { margin: 12px auto; }
+#hint-label { color: #f39c12; font-size: 1.05em; margin-top: 6px; }
+#hint-countdown { font-size: 2.8em; color: #e74c3c; margin-top: 14px; font-weight: bold; }
+
+/* ===== LEVEL UP SCREEN ===== */
+#levelup-overlay h2 { font-size: 2.8em; color: #f1c40f; animation: bounce 0.5s; }
+#levelup-msg { font-size: 1.1em; color: #ecf0f1; }
+
+/* ===== GAME OVER ===== */
+#gameover-overlay h1 { color: #e74c3c; }
+.final-score { font-size: 2.2em; color: #f1c40f; margin: 14px 0; }
+
+/* ===== MUSHROOM ===== */
+.mushroom {
+  position: absolute;
+  cursor: pointer;
+  transform-origin: bottom center;
+  z-index: 10;
+  user-select: none;
+  transition: transform 0.15s;
+}
+.mushroom:hover { transform: scale(1.12); }
+.mushroom:active { transform: scale(0.93); }
+.mushroom.popping { animation: pop 0.3s forwards; pointer-events: none; }
+.mushroom.wrong   { animation: shake 0.4s; }
+
+@keyframes pop {
+  0%   { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0);   opacity: 0; }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%     { transform: translateX(-10px); }
+  75%     { transform: translateX(10px); }
+}
+@keyframes appear {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+@keyframes bounce {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.25); }
+}
+
+/* ===== FEEDBACK TEXT ===== */
+.feedback {
+  position: absolute;
+  font-size: 1.3em;
+  font-weight: bold;
+  pointer-events: none;
+  animation: rise 0.9s forwards;
+  z-index: 100;
+  white-space: nowrap;
+}
+@keyframes rise {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-70px); }
+}
+
+/* ===== TIME WARNING ===== */
+#timer-bar.warn { background: #e74c3c !important; animation: blink 0.5s infinite alternate; }
+@keyframes blink { from { opacity: 1; } to { opacity: 0.4; } }
+
+/* ===== MISS FLASH & LIFE BANNER ===== */
+#miss-flash {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 150;
+}
+@keyframes missflash {
+  0%   { background: rgba(231,76,60,0.55); }
+  100% { background: rgba(231,76,60,0); }
+}
+#miss-flash.active { animation: missflash 0.6s forwards; }
+
+#life-banner {
+  position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  background: rgba(140,0,0,0.93); color: #fff;
+  padding: 9px 26px; border-radius: 24px;
+  font-size: 1.2em; font-weight: bold;
+  pointer-events: none; z-index: 160; white-space: nowrap;
+  display: none;
+}
+@keyframes bannerPop {
+  0%   { opacity: 0; transform: translateX(-50%) scale(0.75); }
+  15%  { opacity: 1; transform: translateX(-50%) scale(1.08); }
+  28%  { transform: translateX(-50%) scale(1); }
+  72%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.95); }
+}
+#life-banner.show { display: block; animation: bannerPop 1.5s forwards; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="stat-box">
+    <div class="stat-label">レベル</div>
+    <div class="stat-value" id="lvl-disp">1</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">スコア</div>
+    <div class="stat-value" id="score-disp">0</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">残り毒キノコ</div>
+    <div class="stat-value" id="poison-disp">0</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">ステージ</div>
+    <div class="stat-value" id="stage-disp">1/1</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">時間</div>
+    <div class="stat-value" id="time-disp">--</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">ライフ</div>
+    <div id="lives-display">❤️❤️❤️</div>
+  </div>
+</div>
+
+<div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+
+<div id="game-field">
+
+  <!-- Start -->
+  <div class="overlay" id="start-overlay">
+    <h1>🍄 毒キノコ狩り</h1>
+    <p>
+      画面に並ぶキノコの中から<br>
+      <strong style="color:#e74c3c">毒キノコだけ</strong>を素早くタップ！<br><br>
+      ✅ 毒キノコを当てると得点<br>
+      💀 食べられるキノコをクリックするとライフ減<br>
+      ⏰ 時間切れでもライフ減<br>
+      ❤️ すべてのライフを使い切るとゲームオーバー
+    </p>
+    <p style="color:#f39c12; font-size:0.95em">
+      ※ 最初にヒントが表示されます。よく見てください！
+    </p>
+    <button class="btn" onclick="startGame()">ゲームスタート 🎯</button>
+  </div>
+
+  <!-- Hint -->
+  <div class="overlay hidden" id="hint-overlay">
+    <h2>⚠️ レベル <span id="hint-level-num">1</span> の毒キノコ</h2>
+    <p>カサの色・水玉の数・水玉の色・柄の色<br>
+    <strong style="color:#e74c3c">すべて完全一致</strong>するものだけが毒キノコです</p>
+    <div id="hint-mushroom-wrap" style="margin:14px auto"></div>
+    <div id="hint-countdown"></div>
+  </div>
+
+  <!-- Level Up -->
+  <div class="overlay hidden" id="levelup-overlay">
+    <h2>⭐ レベルアップ！</h2>
+    <p id="levelup-msg"></p>
+  </div>
+
+  <!-- Game Over -->
+  <div class="overlay hidden" id="gameover-overlay">
+    <h1>💀 ゲームオーバー</h1>
+    <div class="final-score">スコア: <span id="final-score-val">0</span></div>
+    <p>到達レベル: <strong id="final-level-val">1</strong></p>
+    <button class="btn" onclick="restartGame()">もう一度遊ぶ 🔄</button>
+  </div>
+
+  <div id="miss-flash"></div>
+  <div id="life-banner">💀 ライフ -1</div>
+
+</div>
+
+<script>
+// ===== 水玉の色 =====
+// spotColor キーから RGB 文字列に変換（opacity は別途合成）
+const SPOT_RGB = {
+  white:    '255,255,255',
+  cream:    '255,248,220',
+  beige:    '240,228,196',
+  gray:     '150,150,150',
+  warmgray: '220,208,192',
+  gold:     '255,243,176',
+};
+
+// ===== レベル定義 =====
+// 各ラウンドは poisonousMin〜Max でランダム幅を指定
+// Lv8 Rnd4〜 / Lv9〜: moving=true、moveSpeed 指定
+const LEVELS = [
+  // Lv1: 赤vs茶。入門レベル
+  { timeLimit:30,
+    poison:{ capColor:'#e74c3c', spots:4, spotOpacity:1.0, spotColor:'white', stemColor:'#f5f0e0' },
+    rounds:[
+      { total:4,  poisonousMin:1, poisonousMax:2, moving:false, edible:[
+        {capColor:'#8B4513',spots:0,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#A0522D',spots:2,spotColor:'white',stemColor:'#f5f0e0'}]},
+      { total:5,  poisonousMin:1, poisonousMax:2, moving:false, edible:[
+        {capColor:'#8B4513',spots:1,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#A0522D',spots:3,spotColor:'white',stemColor:'#f5f0e0'}]},
+      { total:6,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#8B4513',spots:0,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#A0522D',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#6B3A2A',spots:5,spotColor:'white',stemColor:'#f5f0e0'}]},
+      { total:6,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e74c3c',spots:1,spotOpacity:0.9,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:6,spotOpacity:0.9,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#8B4513',spots:2,spotColor:'white',stemColor:'#f5f0e0'}]},
+      { total:7,  poisonousMin:2, poisonousMax:4, moving:false, edible:[
+        {capColor:'#e74c3c',spots:2,spotOpacity:0.9,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:5,spotOpacity:0.9,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#c0392b',spots:6,spotOpacity:0.85,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#8B4513',spots:1,spotColor:'white',stemColor:'#f5f0e0'}]},
+    ]},
+  // Lv2: 同じ赤、水玉の数が手がかり
+  { timeLimit:27,
+    poison:{ capColor:'#e74c3c', spots:3, spotOpacity:1.0, spotColor:'white', stemColor:'#f5f0e0' },
+    rounds:[
+      { total:5,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e74c3c',spots:1,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:6,spotColor:'white',stemColor:'#f5f0e0'}]},
+      { total:6,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e74c3c',spots:1,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:6,spotColor:'white',stemColor:'#f5f0e0'}]},
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e74c3c',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:6,spotColor:'white',stemColor:'#f5f0e0'}]},
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e74c3c',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:4,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#c0392b',spots:6,spotColor:'white',stemColor:'#f5f0e0'}]},
+      { total:8,  poisonousMin:2, poisonousMax:4, moving:false, edible:[
+        {capColor:'#e74c3c',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:4,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#c0392b',spots:3,spotOpacity:0.70,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'}]},
+    ]},
+  // Lv3: オレンジ・クリーム水玉。Rnd3〜水玉色デコイ登場（最初はグレーで目立つ→徐々に微妙に）
+  { timeLimit:24,
+    poison:{ capColor:'#e67e22', spots:4, spotOpacity:1.0, spotColor:'cream', stemColor:'#f5f0e0' },
+    rounds:[
+      { total:5,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e67e22',spots:1,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:6,spotColor:'cream',stemColor:'#f5f0e0'}]},
+      { total:6,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e67e22',spots:2,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:6,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#d35400',spots:1,spotColor:'cream',stemColor:'#f5f0e0'}]},
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e67e22',spots:2,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:3,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:4,spotColor:'gray',stemColor:'#f5f0e0'},   // 水玉色デコイ初登場（グレーで目立つ）
+        {capColor:'#e67e22',spots:6,spotColor:'cream',stemColor:'#f5f0e0'}]},
+      { total:9,  poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#e67e22',spots:2,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:3,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:5,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:4,spotColor:'gray',stemColor:'#f5f0e0'},   // グレーデコイ継続
+        {capColor:'#d35400',spots:4,spotOpacity:0.80,spotColor:'cream',stemColor:'#f5f0e0'}]}, // capデコイ
+      { total:9,  poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#e67e22',spots:2,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:3,spotColor:'cream',stemColor:'#f5f0e0'},
+        {capColor:'#e67e22',spots:4,spotColor:'gray',stemColor:'#f5f0e0'},   // 水玉色デコイ（グレー）
+        {capColor:'#d35400',spots:4,spotOpacity:0.75,spotColor:'cream',stemColor:'#f5f0e0'}]}, // capデコイ
+    ]},
+  // Lv4: 紫・クリーム水玉・ベージュ柄。Rnd4〜柄デコイも登場
+  { timeLimit:21,
+    poison:{ capColor:'#8e44ad', spots:3, spotOpacity:1.0, spotColor:'cream', stemColor:'#e8dcc8' },
+    rounds:[
+      { total:5,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#8e44ad',spots:1,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:6,spotColor:'cream',stemColor:'#e8dcc8'}]},
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#8e44ad',spots:1,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:5,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:6,spotColor:'cream',stemColor:'#e8dcc8'}]},
+      { total:8,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#8e44ad',spots:2,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:4,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:5,spotColor:'cream',stemColor:'#e8dcc8'}]},
+      { total:9,  poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#8e44ad',spots:2,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:4,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#6c3483',spots:3,spotOpacity:0.75,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:3,spotColor:'gray',stemColor:'#e8dcc8'}]},  // 水玉色デコイ（グレーで見やすい）
+      { total:9,  poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#8e44ad',spots:2,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:4,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#6c3483',spots:3,spotOpacity:0.70,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#8e44ad',spots:3,spotColor:'gray',stemColor:'#e8dcc8'},    // 水玉色デコイ（グレー）
+        {capColor:'#8e44ad',spots:3,spotColor:'cream',stemColor:'#c8aa88'}]}, // 柄デコイ（はっきり違う色）
+    ]},
+  // Lv5: 青・ベージュ水玉・ベージュ柄
+  { timeLimit:19,
+    poison:{ capColor:'#2980b9', spots:5, spotOpacity:0.95, spotColor:'beige', stemColor:'#e8dcc8' },
+    rounds:[
+      { total:6,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#2980b9',spots:2,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:6,spotColor:'beige',stemColor:'#e8dcc8'}]},
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#2980b9',spots:3,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:4,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:6,spotColor:'beige',stemColor:'#e8dcc8'}]},
+      { total:8,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#2980b9',spots:3,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:4,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:5,spotColor:'gray',stemColor:'#e8dcc8'},  // 水玉色デコイ（グレー）
+        {capColor:'#2980b9',spots:6,spotColor:'beige',stemColor:'#e8dcc8'}]},
+      { total:9,  poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#2980b9',spots:3,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:4,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#1a5276',spots:5,spotOpacity:0.70,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:5,spotColor:'gray',stemColor:'#e8dcc8'},  // 水玉色デコイ（グレー）
+        {capColor:'#2980b9',spots:5,spotColor:'beige',stemColor:'#c8aa88'}]}, // 柄デコイ
+      { total:10, poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#2980b9',spots:4,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:6,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#1a5276',spots:5,spotOpacity:0.65,spotColor:'beige',stemColor:'#e8dcc8'},
+        {capColor:'#2980b9',spots:5,spotColor:'gray',stemColor:'#e8dcc8'},  // 水玉色デコイ（グレー）
+        {capColor:'#2980b9',spots:5,spotColor:'beige',stemColor:'#c8aa88'}]}, // 柄デコイ
+    ]},
+  // Lv6: 青緑・ウォームグレー水玉・グレー柄
+  { timeLimit:17,
+    poison:{ capColor:'#16a085', spots:4, spotOpacity:0.85, spotColor:'warmgray', stemColor:'#e0ddd8' },
+    rounds:[
+      { total:6,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#16a085',spots:1,spotOpacity:0.80,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:6,spotOpacity:0.80,spotColor:'warmgray',stemColor:'#e0ddd8'}]},
+      { total:8,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#16a085',spots:2,spotOpacity:0.80,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:5,spotOpacity:0.80,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:6,spotOpacity:0.75,spotColor:'warmgray',stemColor:'#e0ddd8'}]},
+      { total:9,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#16a085',spots:2,spotOpacity:0.80,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:3,spotOpacity:0.78,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:5,spotOpacity:0.75,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:4,spotOpacity:0.82,spotColor:'white',stemColor:'#e0ddd8'}]},  // 水玉色デコイ（白）
+      { total:10, poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#16a085',spots:3,spotOpacity:0.78,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:5,spotOpacity:0.75,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#148f77',spots:4,spotOpacity:0.65,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:4,spotOpacity:0.82,spotColor:'white',stemColor:'#e0ddd8'},   // 水玉色デコイ（白）
+        {capColor:'#16a085',spots:4,spotOpacity:0.80,spotColor:'warmgray',stemColor:'#c8aa88'}]}, // 柄デコイ
+      { total:10, poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#16a085',spots:3,spotOpacity:0.75,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:5,spotOpacity:0.72,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#148f77',spots:4,spotOpacity:0.60,spotColor:'warmgray',stemColor:'#e0ddd8'},
+        {capColor:'#16a085',spots:4,spotOpacity:0.80,spotColor:'white',stemColor:'#e0ddd8'},   // 水玉色デコイ（白）
+        {capColor:'#16a085',spots:4,spotOpacity:0.80,spotColor:'warmgray',stemColor:'#c4a882'}]}, // 柄デコイ（茶系）
+    ]},
+  // Lv7: 赤茶・ベージュ水玉・ウォームベージュ柄
+  { timeLimit:15,
+    poison:{ capColor:'#c0392b', spots:3, spotOpacity:0.70, spotColor:'beige', stemColor:'#ddd5c0' },
+    rounds:[
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#c0392b',spots:1,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#c0392b',spots:6,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'}]},
+      { total:8,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#c0392b',spots:2,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#c0392b',spots:5,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#a04000',spots:1,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'}]},
+      { total:9,  poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#c0392b',spots:2,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#c0392b',spots:4,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#c0392b',spots:3,spotOpacity:0.68,spotColor:'white',stemColor:'#ddd5c0'}, // 水玉色デコイ（白）
+        {capColor:'#c0392b',spots:5,spotOpacity:0.62,spotColor:'beige',stemColor:'#ddd5c0'}]},
+      { total:10, poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#c0392b',spots:2,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#c0392b',spots:4,spotOpacity:0.65,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#922b21',spots:3,spotOpacity:0.52,spotColor:'beige',stemColor:'#ddd5c0'},  // cap違い
+        {capColor:'#c0392b',spots:3,spotOpacity:0.68,spotColor:'white',stemColor:'#ddd5c0'}, // 水玉色デコイ（白）
+        {capColor:'#c0392b',spots:3,spotOpacity:0.68,spotColor:'beige',stemColor:'#c8aa88'}]}, // 柄デコイ
+      { total:11, poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#c0392b',spots:2,spotOpacity:0.63,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#c0392b',spots:4,spotOpacity:0.63,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#922b21',spots:3,spotOpacity:0.50,spotColor:'beige',stemColor:'#ddd5c0'},
+        {capColor:'#c0392b',spots:3,spotOpacity:0.66,spotColor:'white',stemColor:'#ddd5c0'}, // 水玉色デコイ（白）
+        {capColor:'#c0392b',spots:3,spotOpacity:0.66,spotColor:'beige',stemColor:'#c4a882'}]}, // 柄デコイ（茶系）
+    ]},
+  // Lv8: こげ茶・クリーム水玉・ベージュ柄。Rnd4から動き始める！
+  { timeLimit:13,
+    poison:{ capColor:'#784212', spots:2, spotOpacity:0.55, spotColor:'cream', stemColor:'#e8dcc8' },
+    rounds:[
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:4,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'}]},
+      { total:8,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:4,spotOpacity:0.48,spotColor:'cream',stemColor:'#e8dcc8'}]},
+      { total:9,  poisonousMin:3, poisonousMax:4, moving:false, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'white',stemColor:'#e8dcc8'}, // 水玉色デコイ
+        {capColor:'#5d4037',spots:4,spotOpacity:0.46,spotColor:'cream',stemColor:'#e8dcc8'}]},
+      { total:10, poisonousMin:3, poisonousMax:4, moving:true, moveSpeed:0.20, edible:[  // ★動き始める！
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#6e2f1a',spots:2,spotOpacity:0.40,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'white',stemColor:'#e8dcc8'}, // 水玉色デコイ
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'cream',stemColor:'#f5f0e0'}]}, // 柄デコイ
+      { total:12, poisonousMin:4, poisonousMax:5, moving:true, moveSpeed:0.35, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#6e2f1a',spots:2,spotOpacity:0.38,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'white',stemColor:'#e8dcc8'}, // 水玉色デコイ
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'cream',stemColor:'#f5f0e0'}]}, // 柄デコイ
+    ]},
+  // Lv9: 動くキノコ。ラウンドごとに速くなる
+  { timeLimit:15,
+    poison:{ capColor:'#784212', spots:2, spotOpacity:0.55, spotColor:'cream', stemColor:'#e8dcc8' },
+    rounds:[
+      { total:8,  poisonousMin:2, poisonousMax:3, moving:true, moveSpeed:0.50, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'white',stemColor:'#e8dcc8'}]},
+      { total:9,  poisonousMin:2, poisonousMax:3, moving:true, moveSpeed:0.65, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'white',stemColor:'#e8dcc8'},
+        {capColor:'#5d4037',spots:4,spotOpacity:0.46,spotColor:'cream',stemColor:'#e8dcc8'}]},
+      { total:10, poisonousMin:3, poisonousMax:4, moving:true, moveSpeed:0.80, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#6e2f1a',spots:2,spotOpacity:0.40,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'white',stemColor:'#e8dcc8'}]},
+      { total:11, poisonousMin:3, poisonousMax:4, moving:true, moveSpeed:0.95, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#6e2f1a',spots:2,spotOpacity:0.38,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'white',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'cream',stemColor:'#f5f0e0'}]},
+      { total:12, poisonousMin:4, poisonousMax:5, moving:true, moveSpeed:1.10, edible:[
+        {capColor:'#784212',spots:1,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:3,spotOpacity:0.50,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#6e2f1a',spots:2,spotOpacity:0.38,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#5d4037',spots:2,spotOpacity:0.35,spotColor:'cream',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'white',stemColor:'#e8dcc8'},
+        {capColor:'#784212',spots:2,spotOpacity:0.52,spotColor:'cream',stemColor:'#f5f0e0'}]},
+    ]},
+];
+
+// Lv10以降: Lv9ベースでラウンドごとのmoveSpeedをさらに上げる
+function getLvlCfg(level) {
+  if (level < LEVELS.length) return LEVELS[level];
+  const extra = level - (LEVELS.length - 1);
+  const baseLvl = LEVELS[LEVELS.length - 1];
+  return {
+    ...baseLvl,
+    timeLimit: Math.max(10, baseLvl.timeLimit - extra),
+    rounds: baseLvl.rounds.map((r, i) => ({
+      ...r,
+      moveSpeed: 1.1 + extra * 0.25 + i * 0.1,
+    })),
+  };
+}
+
+// ===== GAME STATE =====
+let G = {};
+function resetState() {
+  G = { level:0, score:0, lives:3, timeLeft:0, timerId:null,
+        mushrooms:[], poisonLeft:0, active:false,
+        roundsCompleted:0, animFrame:null, roundCfg:null, mistakesThisLevel:0 };
+}
+
+// ===== DOM =====
+const $ = id => document.getElementById(id);
+const header    = $('header');
+const timerWrap = $('timer-bar-wrap');
+const timerBar  = $('timer-bar');
+const gameField = $('game-field');
+const overlays  = { start:$('start-overlay'), hint:$('hint-overlay'), levelup:$('levelup-overlay'), gameover:$('gameover-overlay') };
+
+function showOnly(key) {
+  Object.values(overlays).forEach(o => o.classList.add('hidden'));
+  if (key) overlays[key].classList.remove('hidden');
+}
+
+// ===== MUSHROOM DRAWING =====
+const SPOT_LAYOUTS = {
+  1:[{l:'42%',t:'25%',s:'20%'}],
+  2:[{l:'20%',t:'26%',s:'18%'},{l:'58%',t:'22%',s:'18%'}],
+  3:[{l:'16%',t:'42%',s:'16%'},{l:'46%',t:'14%',s:'16%'},{l:'68%',t:'40%',s:'16%'}],
+  4:[{l:'16%',t:'16%',s:'15%'},{l:'56%',t:'12%',s:'15%'},{l:'14%',t:'50%',s:'15%'},{l:'58%',t:'48%',s:'15%'}],
+  5:[{l:'14%',t:'18%',s:'14%'},{l:'52%',t:'12%',s:'14%'},{l:'70%',t:'42%',s:'14%'},{l:'10%',t:'50%',s:'14%'},{l:'38%',t:'42%',s:'14%'}],
+  6:[{l:'12%',t:'14%',s:'13%'},{l:'42%',t:'10%',s:'13%'},{l:'66%',t:'16%',s:'13%'},{l:'10%',t:'48%',s:'13%'},{l:'42%',t:'48%',s:'13%'},{l:'68%',t:'46%',s:'13%'}],
+};
+
+function buildMushroom(type, size) {
+  const s = size || 80;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `width:${s}px;display:inline-block;position:relative;`;
+  const capW=s, capH=Math.round(s*0.55), stemW=Math.round(s*0.34), stemH=Math.round(s*0.45);
+
+  const cap = document.createElement('div');
+  cap.style.cssText = `width:${capW}px;height:${capH}px;background:${type.capColor};border-radius:50% 50% 10% 10%;position:relative;overflow:hidden;box-shadow:inset -4px -6px 10px rgba(0,0,0,0.25);`;
+
+  const layout = SPOT_LAYOUTS[type.spots||0] || [];
+  const opacity = type.spotOpacity !== undefined ? type.spotOpacity : 1;
+  const rgb = SPOT_RGB[type.spotColor || 'white'];
+  for (const pos of layout) {
+    const sp = document.createElement('div');
+    sp.style.cssText = `position:absolute;left:${pos.l};top:${pos.t};width:${pos.s};height:${pos.s};background:rgba(${rgb},${opacity});border-radius:50%;`;
+    cap.appendChild(sp);
+  }
+
+  const stemColor = type.stemColor || '#f5f0e0';
+  const stem = document.createElement('div');
+  stem.style.cssText = `width:${stemW}px;height:${stemH}px;background:${stemColor};border-radius:4px 4px 10px 10px;margin:0 auto;box-shadow:inset -2px 0 4px rgba(0,0,0,0.1);`;
+
+  wrap.appendChild(cap); wrap.appendChild(stem);
+  return wrap;
+}
+
+// ===== START / RESTART =====
+function startGame() {
+  resetState();
+  header.style.display = 'flex';
+  timerWrap.style.display = 'block';
+  updateUI();
+  doHint();
+}
+function restartGame() { stopMoving(); clearTimer(); clearMushrooms(); startGame(); }
+
+// ===== HINT PHASE =====
+function doHint() {
+  clearTimer(); stopMoving(); clearMushrooms();
+  G.active = false;
+  G.roundsCompleted = 0;
+  G.roundCfg = null;
+  G.mistakesThisLevel = 0;
+
+  const lvl = getLvlCfg(G.level);
+  $('hint-level-num').textContent = G.level + 1;
+  const wrap = $('hint-mushroom-wrap');
+  wrap.innerHTML = '';
+  wrap.appendChild(buildMushroom(lvl.poison, 120));
+
+
+  let c = 7;
+  $('hint-countdown').textContent = '';
+  showOnly('hint');
+  const iv = setInterval(() => {
+    c--;
+    if (c <= 0) { clearInterval(iv); showOnly(null); doRound(); }
+    else $('hint-countdown').textContent = c <= 3 ? c : '';
+  }, 1000);
+}
+
+// ===== ROUND START =====
+function doRound() {
+  clearMushrooms(); stopMoving();
+  G.active = true;
+
+  const lvl = getLvlCfg(G.level);
+  const r = lvl.rounds[Math.min(G.roundsCompleted, lvl.rounds.length - 1)];
+  const poisonous = r.poisonousMin + Math.floor(Math.random() * (r.poisonousMax - r.poisonousMin + 1));
+  G.roundCfg = {
+    total: r.total, poisonous, edible: r.edible,
+    poison: lvl.poison, timeLimit: r.timeLimit || lvl.timeLimit,
+    moving: r.moving || false, moveSpeed: r.moveSpeed || 0,
+    roundsTotal: lvl.rounds.length,
+  };
+
+  const cfg = G.roundCfg;
+  G.timeLeft   = cfg.timeLimit;
+  G.poisonLeft = cfg.poisonous;
+  placeMushrooms(cfg);
+  updateUI();
+  runTimer(cfg.timeLimit);
+  if (cfg.moving) startMoving(cfg.moveSpeed);
+}
+
+// ===== PLACE MUSHROOMS =====
+function placeMushrooms(cfg) {
+  const fw=gameField.clientWidth, fh=gameField.clientHeight;
+  const sz=Math.min(80, Math.floor(fw/(cfg.total*0.6+1)));
+  const pad=12, groundH=55;
+  const types=[];
+  for (let i=0;i<cfg.poisonous;i++) types.push({...cfg.poison, isPoisonous:true});
+  for (let i=0;i<cfg.total-cfg.poisonous;i++) types.push({...cfg.edible[i%cfg.edible.length], isPoisonous:false});
+  types.sort(()=>Math.random()-0.5);
+  const placed=[];
+  types.forEach((type,idx)=>{
+    let x,y,tries=0;
+    do {
+      x=pad+Math.random()*(fw-sz-pad*2);
+      y=pad+Math.random()*(fh-sz-groundH-pad*2);
+      tries++;
+    } while(tries<80 && placed.some(p=>Math.abs(p.x-x)<sz+8&&Math.abs(p.y-y)<sz+8));
+    placed.push({x,y});
+    const el=document.createElement('div');
+    el.className='mushroom';
+    el.style.left=x+'px'; el.style.top=y+'px'; el.style.width=sz+'px';
+    el.style.animation=`appear 0.3s ${idx*70}ms both`;
+    el.appendChild(buildMushroom(type,sz));
+    const m={el,isPoisonous:type.isPoisonous,x,y,sz};
+    el.addEventListener('click',()=>onMushroomClick(m));
+    gameField.appendChild(el);
+    G.mushrooms.push(m);
+  });
+}
+
+// ===== MOVING MUSHROOMS =====
+function startMoving(speed) {
+  G.mushrooms.forEach(m=>{
+    const a=Math.random()*Math.PI*2;
+    m.vx=Math.cos(a)*speed; m.vy=Math.sin(a)*speed;
+    m.el.style.transition='none';
+  });
+  animLoop();
+}
+function animLoop() {
+  if(!G.active) return;
+  const fw=gameField.clientWidth, fh=gameField.clientHeight, groundH=55;
+  G.mushrooms.forEach(m=>{
+    if(m.vx===undefined) return;
+    m.x+=m.vx; m.y+=m.vy;
+    const maxX=fw-m.sz, maxY=fh-m.sz-groundH;
+    if(m.x<0){m.x=0;m.vx*=-1;} if(m.x>maxX){m.x=maxX;m.vx*=-1;}
+    if(m.y<0){m.y=0;m.vy*=-1;} if(m.y>maxY){m.y=maxY;m.vy*=-1;}
+    m.el.style.left=m.x+'px'; m.el.style.top=m.y+'px';
+  });
+  G.animFrame=requestAnimationFrame(animLoop);
+}
+function stopMoving() { if(G.animFrame){cancelAnimationFrame(G.animFrame);G.animFrame=null;} }
+
+// ===== CLICK HANDLER =====
+function onMushroomClick(m) {
+  if(!G.active||m.el.dataset.done) return;
+  m.el.dataset.done='1';
+  if(m.isPoisonous) {
+    const pts=10*(G.level+1);
+    G.score+=pts; G.poisonLeft--;
+    m.el.classList.add('popping');
+    showFeedback(m.x,m.y,`+${pts}`,'#2ecc71');
+    setTimeout(()=>m.el.remove(),300);
+    updateUI();
+    if(G.poisonLeft<=0){G.active=false;clearTimer();stopMoving();setTimeout(doRoundClear,400);}
+  } else {
+    m.el.classList.add('wrong');
+    showFeedback(m.x,m.y,'💀 ミス！','#e74c3c');
+    setTimeout(()=>{delete m.el.dataset.done;m.el.classList.remove('wrong');},420);
+    decrementLife();
+  }
+}
+
+// ===== ROUND CLEAR =====
+function doRoundClear() {
+  G.roundsCompleted++;
+  const roundsTotal = G.roundCfg ? G.roundCfg.roundsTotal : 5;
+  if(G.roundsCompleted < roundsTotal) {
+    const left=roundsTotal-G.roundsCompleted;
+    overlays.levelup.querySelector('h2').textContent='✅ クリア！';
+    $('levelup-msg').textContent=`ステージ ${G.roundsCompleted}/${roundsTotal} ｜ あと ${left} 回！`;
+    showOnly('levelup');
+    setTimeout(()=>{showOnly(null);doRound();},3200);
+  } else {
+    const bonusLife = G.mistakesThisLevel === 0 && G.lives < 5;
+    if(bonusLife) G.lives++;
+    G.level++; G.roundsCompleted=0; G.roundCfg=null; G.mistakesThisLevel=0;
+    updateUI();
+    overlays.levelup.querySelector('h2').textContent = bonusLife ? '⭐ レベルアップ！ ＋❤️' : '⭐ レベルアップ！';
+    $('levelup-msg').innerHTML = bonusLife
+      ? `🎉 ノーミスクリア！ライフ +1 ボーナス！<br>スコア ${G.score} ｜ レベル ${G.level+1} へ！`
+      : `スコア ${G.score} ｜ レベル ${G.level+1} へ！`;
+    showOnly('levelup');
+    setTimeout(()=>{showOnly(null);doHint();},3800);
+  }
+}
+
+// ===== LIFE / GAME OVER =====
+function decrementLife() {
+  G.mistakesThisLevel++;
+  G.lives--;
+  // 画面フラッシュ
+  const fl = $('miss-flash');
+  fl.classList.remove('active'); void fl.offsetWidth; fl.classList.add('active');
+  // ライフ減バナー
+  const bn = $('life-banner');
+  bn.textContent = `💀 ライフ -1　残り ❤️ ✕${Math.max(0,G.lives)}`;
+  bn.classList.remove('show'); void bn.offsetWidth; bn.classList.add('show');
+  updateUI();
+  if(G.lives<=0){G.active=false;clearTimer();stopMoving();setTimeout(doGameOver,500);}
+}
+
+// ===== TIMER =====
+function runTimer(total) {
+  timerBar.style.transition='none'; timerBar.style.width='100%'; timerBar.className='';
+  void timerBar.offsetWidth;
+  timerBar.style.transition='width 1s linear, background 0.4s';
+  G.timerId=setInterval(()=>{
+    G.timeLeft--;
+    $('time-disp').textContent=G.timeLeft;
+    const pct=(G.timeLeft/total)*100;
+    timerBar.style.width=pct+'%';
+    if(pct<25){timerBar.style.background='#e74c3c';timerBar.classList.add('warn');}
+    else if(pct<55) timerBar.style.background='#f39c12';
+    if(G.timeLeft<=0){
+      clearTimer();G.active=false;stopMoving();
+      showFeedback(gameField.clientWidth/2-60,gameField.clientHeight/2-40,'⏰ 時間切れ！','#e74c3c');
+      decrementLife();
+      if(G.lives>0) setTimeout(doHint,1000);
+    }
+  },1000);
+}
+function clearTimer(){clearInterval(G.timerId);G.timerId=null;}
+
+// ===== GAME OVER =====
+function doGameOver() {
+  clearMushrooms();
+  $('final-score-val').textContent=G.score;
+  $('final-level-val').textContent=G.level+1;
+  showOnly('gameover');
+}
+
+// ===== FEEDBACK =====
+function showFeedback(x,y,text,color) {
+  const fb=document.createElement('div');
+  fb.className='feedback'; fb.style.left=Math.round(x)+'px'; fb.style.top=Math.round(y)+'px';
+  fb.style.color=color; fb.textContent=text;
+  gameField.appendChild(fb); setTimeout(()=>fb.remove(),900);
+}
+
+// ===== UPDATE UI =====
+function updateUI() {
+  const cfg=G.roundCfg || {roundsTotal:5};
+  $('lvl-disp').textContent   =G.level+1;
+  $('score-disp').textContent =G.score;
+  $('poison-disp').textContent=G.poisonLeft;
+  $('time-disp').textContent  =G.timeLeft>0?G.timeLeft:'--';
+  $('stage-disp').textContent =`${G.roundsCompleted+1}/${cfg.roundsTotal}`;
+  $('lives-display').textContent=`❤️ ✕${Math.max(0,G.lives)}`;
+}
+
+// ===== CLEAR MUSHROOMS =====
+function clearMushrooms() {
+  G.mushrooms.forEach(m=>m.el.remove()); G.mushrooms=[];
+  document.querySelectorAll('.feedback').forEach(f=>f.remove());
+}
+</script>
+</body>
+</html>
