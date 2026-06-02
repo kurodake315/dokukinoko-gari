@@ -301,15 +301,17 @@ const LEVELS = [
         {capColor:'#8B4513',spots:0,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#A0522D',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#6B3A2A',spots:5,spotColor:'white',stemColor:'#f5f0e0'}]},
-      { total:6,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
         {capColor:'#e74c3c',spots:1,spotOpacity:0.9,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#e74c3c',spots:6,spotOpacity:0.9,spotColor:'white',stemColor:'#f5f0e0'},
-        {capColor:'#8B4513',spots:2,spotColor:'white',stemColor:'#f5f0e0'}]},
-      { total:7,  poisonousMin:2, poisonousMax:4, moving:false, edible:[
+        {capColor:'#8B4513',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:4,spotOpacity:0.85,spotColor:'gray',stemColor:'#f5f0e0'}]}, // 水玉色デコイ初登場！
+      { total:8,  poisonousMin:2, poisonousMax:4, moving:false, edible:[
         {capColor:'#e74c3c',spots:2,spotOpacity:0.9,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#e74c3c',spots:5,spotOpacity:0.9,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#c0392b',spots:6,spotOpacity:0.85,spotColor:'white',stemColor:'#f5f0e0'},
-        {capColor:'#8B4513',spots:1,spotColor:'white',stemColor:'#f5f0e0'}]},
+        {capColor:'#e74c3c',spots:4,spotOpacity:0.85,spotColor:'gray',stemColor:'#f5f0e0'},  // 水玉色デコイ
+        {capColor:'#e74c3c',spots:4,spotOpacity:0.85,spotColor:'white',stemColor:'#c8aa88'}]}, // 柄デコイ
     ]},
   // Lv2: 同じ赤、水玉の数が手がかり
   { timeLimit:27,
@@ -318,24 +320,29 @@ const LEVELS = [
       { total:5,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
         {capColor:'#e74c3c',spots:1,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#e74c3c',spots:6,spotColor:'white',stemColor:'#f5f0e0'}]},
-      { total:6,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
         {capColor:'#e74c3c',spots:1,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'},
-        {capColor:'#e74c3c',spots:6,spotColor:'white',stemColor:'#f5f0e0'}]},
-      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e74c3c',spots:6,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:3,spotOpacity:0.85,spotColor:'gray',stemColor:'#f5f0e0'}]}, // 水玉色デコイ初登場！
+      { total:8,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
         {capColor:'#e74c3c',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'},
-        {capColor:'#e74c3c',spots:6,spotColor:'white',stemColor:'#f5f0e0'}]},
-      { total:7,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
+        {capColor:'#e74c3c',spots:6,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:3,spotOpacity:0.85,spotColor:'gray',stemColor:'#f5f0e0'}]}, // 水玉色デコイ
+      { total:8,  poisonousMin:2, poisonousMax:3, moving:false, edible:[
         {capColor:'#e74c3c',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#e74c3c',spots:4,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'},
-        {capColor:'#c0392b',spots:6,spotColor:'white',stemColor:'#f5f0e0'}]},
-      { total:8,  poisonousMin:2, poisonousMax:4, moving:false, edible:[
+        {capColor:'#c0392b',spots:6,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:3,spotOpacity:0.85,spotColor:'gray',stemColor:'#f5f0e0'}]}, // 水玉色デコイ
+      { total:9,  poisonousMin:2, poisonousMax:4, moving:false, edible:[
         {capColor:'#e74c3c',spots:2,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#e74c3c',spots:4,spotColor:'white',stemColor:'#f5f0e0'},
         {capColor:'#c0392b',spots:3,spotOpacity:0.70,spotColor:'white',stemColor:'#f5f0e0'},
-        {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'}]},
+        {capColor:'#e74c3c',spots:5,spotColor:'white',stemColor:'#f5f0e0'},
+        {capColor:'#e74c3c',spots:3,spotOpacity:0.85,spotColor:'gray',stemColor:'#f5f0e0'},  // 水玉色デコイ
+        {capColor:'#e74c3c',spots:3,spotOpacity:0.85,spotColor:'white',stemColor:'#c8aa88'}]}, // 柄デコイ
     ]},
   // Lv3: オレンジ・クリーム水玉。Rnd3〜水玉色デコイ登場（最初はグレーで目立つ→徐々に微妙に）
   { timeLimit:24,
@@ -578,6 +585,67 @@ function showOnly(key) {
   if (key) overlays[key].classList.remove('hidden');
 }
 
+// ===== AUDIO =====
+let _actx = null;
+function actx() {
+  if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_actx.state === 'suspended') _actx.resume();
+  return _actx;
+}
+function tone(freq, dur, type='sine', vol=0.28, delay=0) {
+  const c = actx();
+  const osc = c.createOscillator(), g = c.createGain();
+  osc.connect(g); g.connect(c.destination);
+  osc.type = type; osc.frequency.value = freq;
+  const t = c.currentTime + delay;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.start(t); osc.stop(t + dur + 0.02);
+}
+// 効果音
+function sfxCorrect()    { tone(880,0.07,'sine',0.25); tone(1108,0.12,'sine',0.2,0.07); }
+function sfxWrong()      { tone(180,0.14,'sawtooth',0.28); tone(140,0.22,'sawtooth',0.18,0.12); }
+function sfxTimeUp()     { [0,1,2].forEach(i=>tone(700,0.07,'square',0.18,i*0.13)); tone(280,0.45,'sawtooth',0.18,0.42); }
+function sfxRoundClear() { [523,659,784].forEach((f,i)=>tone(f,0.12,'sine',0.2,i*0.1)); }
+function sfxLevelUp()    { [523,659,784,1047].forEach((f,i)=>tone(f,0.15,'sine',0.26,i*0.13)); }
+function sfxGameOver()   { [440,370,311,261].forEach((f,i)=>tone(f,0.28,'sawtooth',0.2,i*0.22)); }
+function sfxCountdown()  { tone(660,0.07,'sine',0.22); }
+function sfxCountdownGo(){ tone(880,0.05,'sine',0.28); tone(1108,0.14,'sine',0.22,0.05); }
+
+// BGM
+let _bgmOn=false, _bgmTid=null;
+const _B = 60/140; // テンポ140BPM
+const _BGM = [
+  [523,1],[659,1],[784,1],[659,1],[523,1],[659,1],[523,2],
+  [784,1],[880,1],[784,1],[659,1],[523,1],[659,1],[784,3],
+  [659,1],[523,1],[392,1],[523,1],[659,1],[784,1],[659,2],
+  [523,1],[659,1],[784,1],[523,1],[392,2],[523,2],
+];
+function _bgmLoop() {
+  if (!_bgmOn) return;
+  const c = actx(); let t = c.currentTime + 0.05;
+  _BGM.forEach(([f, b]) => {
+    const d = b * _B;
+    // メロディ
+    const o=c.createOscillator(), g=c.createGain();
+    o.connect(g); g.connect(c.destination);
+    o.type='triangle'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.022,t); g.gain.setValueAtTime(0.022,t+d*0.78); g.gain.linearRampToValueAtTime(0.001,t+d);
+    o.start(t); o.stop(t+d+0.05);
+    // ベース（1オクターブ下）
+    const o2=c.createOscillator(), g2=c.createGain();
+    o2.connect(g2); g2.connect(c.destination);
+    o2.type='sine'; o2.frequency.value=f/2;
+    g2.gain.setValueAtTime(0.012,t); g2.gain.exponentialRampToValueAtTime(0.001,t+Math.min(d,_B*0.6));
+    o2.start(t); o2.stop(t+d+0.05);
+    t += d;
+  });
+  const total = _BGM.reduce((s,[,b])=>s+b*_B,0);
+  _bgmTid = setTimeout(_bgmLoop, (total-0.15)*1000);
+}
+function startBGM() { if(_bgmOn)return; _bgmOn=true; _bgmLoop(); }
+function stopBGM()  { _bgmOn=false; if(_bgmTid){clearTimeout(_bgmTid);_bgmTid=null;} }
+
 // ===== MUSHROOM DRAWING =====
 const SPOT_LAYOUTS = {
   1:[{l:'42%',t:'25%',s:'20%'}],
@@ -620,9 +688,10 @@ function startGame() {
   header.style.display = 'flex';
   timerWrap.style.display = 'block';
   updateUI();
+  startBGM();
   doHint();
 }
-function restartGame() { stopMoving(); clearTimer(); clearMushrooms(); startGame(); }
+function restartGame() { stopMoving(); clearTimer(); clearMushrooms(); stopBGM(); startGame(); }
 
 // ===== HINT PHASE =====
 function doHint() {
@@ -644,8 +713,8 @@ function doHint() {
   showOnly('hint');
   const iv = setInterval(() => {
     c--;
-    if (c <= 0) { clearInterval(iv); showOnly(null); doRound(); }
-    else $('hint-countdown').textContent = c <= 3 ? c : '';
+    if (c <= 0) { sfxCountdownGo(); clearInterval(iv); showOnly(null); doRound(); }
+    else { $('hint-countdown').textContent = c <= 3 ? c : ''; if(c<=3) sfxCountdown(); }
   }, 1000);
 }
 
@@ -732,6 +801,7 @@ function onMushroomClick(m) {
   if(!G.active||m.el.dataset.done) return;
   m.el.dataset.done='1';
   if(m.isPoisonous) {
+    sfxCorrect();
     const pts=10*(G.level+1);
     G.score+=pts; G.poisonLeft--;
     m.el.classList.add('popping');
@@ -740,6 +810,7 @@ function onMushroomClick(m) {
     updateUI();
     if(G.poisonLeft<=0){G.active=false;clearTimer();stopMoving();setTimeout(doRoundClear,400);}
   } else {
+    sfxWrong();
     m.el.classList.add('wrong');
     showFeedback(m.x,m.y,'💀 ミス！','#e74c3c');
     setTimeout(()=>{delete m.el.dataset.done;m.el.classList.remove('wrong');},420);
@@ -752,13 +823,15 @@ function doRoundClear() {
   G.roundsCompleted++;
   const roundsTotal = G.roundCfg ? G.roundCfg.roundsTotal : 5;
   if(G.roundsCompleted < roundsTotal) {
+    sfxRoundClear();
     const left=roundsTotal-G.roundsCompleted;
     overlays.levelup.querySelector('h2').textContent='✅ クリア！';
     $('levelup-msg').textContent=`ステージ ${G.roundsCompleted}/${roundsTotal} ｜ あと ${left} 回！`;
     showOnly('levelup');
     setTimeout(()=>{showOnly(null);doRound();},3200);
   } else {
-    const bonusLife = G.mistakesThisLevel === 0 && G.lives < 5;
+    sfxLevelUp();
+    const bonusLife = G.mistakesThisLevel === 0;
     if(bonusLife) G.lives++;
     G.level++; G.roundsCompleted=0; G.roundCfg=null; G.mistakesThisLevel=0;
     updateUI();
@@ -800,6 +873,7 @@ function runTimer(total) {
     else if(pct<55) timerBar.style.background='#f39c12';
     if(G.timeLeft<=0){
       clearTimer();G.active=false;stopMoving();
+      sfxTimeUp();
       showFeedback(gameField.clientWidth/2-60,gameField.clientHeight/2-40,'⏰ 時間切れ！','#e74c3c');
       decrementLife();
       if(G.lives>0) setTimeout(doHint,1000);
@@ -810,6 +884,8 @@ function clearTimer(){clearInterval(G.timerId);G.timerId=null;}
 
 // ===== GAME OVER =====
 function doGameOver() {
+  stopBGM();
+  sfxGameOver();
   clearMushrooms();
   $('final-score-val').textContent=G.score;
   $('final-level-val').textContent=G.level+1;
